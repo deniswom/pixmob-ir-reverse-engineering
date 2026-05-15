@@ -145,9 +145,9 @@ module tray() {
             rotate([90, 0, 0])
                 cylinder(d = recv_d, h = wall + 0.2);
 
-        // ── Label-Fenster zwischen den beiden Löchern (für Gravur/Beschriftung)
-        translate([ow/2 - 8, -0.1, recv_cz + recv_d/2 + 1])
-            cube([16, 0.6, ir_cz - recv_cz - recv_d/2 - ir_d/2 - 2]);
+        // ── Label-Vertiefung vorne (Gravur zwischen den zwei Löchern)
+        translate([ow/2 - 7, -0.01, recv_cz + recv_d/2 + 1.5])
+            cube([14, 0.5, max(0.1, ir_cz - recv_cz - recv_d/2 - ir_d/2 - 3)]);
 
         // ── Kabelkanal ── Rückwand (y = ol), breiter für 6 Jumper
         translate([ow/2 - cable_w/2, ol - wall - 0.1, floor_t + 0.5])
@@ -167,6 +167,7 @@ module tray() {
                 cylinder(r = pr, h = ph);
 
     // ── Führungsrippen für KY-005 PCB ──
+    // Hinweis: Slicer (Cura/PrusaSlicer) repariert koplanare Flächen automatisch
     // Hält das Sender-Modul seitlich an der Vorderwand
     rib_h = ky_t + 1.0;
     // Linke Rippe
