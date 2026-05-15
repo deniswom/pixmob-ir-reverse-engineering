@@ -112,23 +112,6 @@ module tray() {
         // Innenraum (oben offen)
         translate([wall, wall, floor_t])
             cube([iw, il, ih + 0.1]);
-
-        // ---- RECHTE KURZE WAND (x=ow) -- IR-Sender LED Loch ----
-        translate([ow - wall - 0.1, ir_y, ir_z])
-            rotate([0, 90, 0])
-                cylinder(d = ir_d, h = wall + 0.2);
-
-        // ---- LINKE KURZE WAND (x=0) -- USB-C Kabelkanal ----
-        translate([-0.1, usbc_y, usbc_z])
-            cube([wall + 0.2, usbc_w, usbc_h + 1]);
-
-        // ---- LINKE KURZE WAND (x=0) -- Jumper-Kabelkanal ----
-        translate([-0.1, jmp_y, jmp_z])
-            cube([wall + 0.2, jmp_w, jmp_h]);
-
-        // ---- VORDERE LANGE WAND (y=0) -- Daumen-Kerbe ----
-        translate([ow/2 - 12, -0.1, floor_t + 1])
-            cube([24, wall + 0.2, 10]);
     }
 
     // ---- Breadboard-Halterung ----
@@ -169,28 +152,7 @@ module lid() {
                 }
         }
 
-        // IR-Empfaenger Loch (Sensor-Dom zeigt nach oben)
-        translate([recv_x, recv_y, -0.1])
-            cylinder(d = recv_d, h = lid_t + 0.2);
-
-        // Lueftungs-Gitter (3x4 Schlitze, nicht ueber Empfaenger-Loch)
-        slot_w   = 3.0;
-        slot_l   = 14.0;
-        slot_gap = 5.0;
-        for (xi = [0:2])
-            for (yi = [0:3])
-                translate([ow/2 - (3*slot_w + 2*slot_gap)/2 + xi*(slot_w + slot_gap),
-                           ol/2 - (4*slot_l + 3*4)/2 + yi*(slot_l + 4),
-                           -0.1])
-                    cube([slot_w, slot_l, lid_t + 0.2]);
-
-        // Daumen-Kerbe (Deckel abziehen, vorne)
-        translate([ow/2 - 15, -0.1, -0.1])
-            cube([30, 2, lid_t + 0.2]);
-
-        // Gravur-Vertiefung
-        translate([wall + 4, wall + 4, lid_t - 0.4])
-            cube([ow - 2*wall - 8, 18, 0.4 + 0.01]);
+        // (keine Loecher -- werden in Bambu Studio gesetzt)
     }
 }
 
