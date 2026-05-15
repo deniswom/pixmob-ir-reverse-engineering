@@ -18,15 +18,22 @@ Kein Router, kein Internet nötig — Smartphone direkt mit dem ESP verbinden, f
 
 | Komponente | Detail |
 |---|---|
-| Mikrocontroller | ESP8266 — NodeMCU v3 oder Wemos D1 Mini |
-| IR-Sender | KY-005 Infrarot-Modul |
-| IR-Pin | **D2 / GPIO4** |
+| Mikrocontroller | Wemos D1 Mini (ESP8266-12F, FT232, USB Type-C, 4MB Flash) |
+| IR-Sender | IR Transmitter Modul (DAT/VCC/GND) |
+| IR-Sender Pin | **D2 / GPIO4** |
+| IR-Empfänger | IR Receiver Modul (S/VCC/GND) |
+| IR-Empfänger Pin | **D5 / GPIO14** |
 | Stromversorgung | USB-Powerbank |
 
-**Verdrahtung KY-005:**
-- `S` (Signal) → D2 (GPIO4)
-- `+` (VCC)    → 3V3
-- `-` (GND)    → GND
+**Verdrahtung IR-Sender:**
+- `DAT` → D2 (GPIO4)
+- `VCC` → **5V** (nicht 3V3 — für maximale LED-Helligkeit)
+- `GND` → G
+
+**Verdrahtung IR-Empfänger:**
+- `S` / `OUT` → D5 (GPIO14)
+- `VCC` → 3V3
+- `GND` → G
 
 ---
 
@@ -38,6 +45,7 @@ Kein Router, kein Internet nötig — Smartphone direkt mit dem ESP verbinden, f
 | SSID | `PixMob_Party` |
 | Passwort | `partytime` |
 | IP | `192.168.4.1` |
+| mDNS | `http://pixmob.local` |
 
 ---
 
@@ -48,33 +56,32 @@ arduino_sender/PixMob_WebController_ESP8266/PixMob_WebController_ESP8266.ino
 ```
 
 ### Was der Sketch macht
-- Startet einen **WLAN Access Point** (kein STA-Modus, kein Router nötig)
-- Stellt eine **mobile-optimierte Web-UI** über ESPAsyncWebServer bereit
-- Konvertiert PixMob-Binärarrays per **RLE → µs** und sendet sie mit `irsend.sendRaw()`
-- Sendet jedes Signal **3× wiederholt** (10 ms Pause) für bessere Empfangsrate
+- Startet einen **WLAN Access Point** (kein Router nötig)
+- Stellt eine **mobile-optimierte Web-UI v2** über ESPAsyncWebServer bereit
+- Erreichbar über `http://pixmob.local` (mDNS) oder `http://192.168.4.1`
+- Sendet PixMob-Signale mit `irsend.sendRaw()` — **5× wiederholt** für Zuverlässigkeit
+- **IR-Empfänger** liest Fernbedienungs-Codes, mappt sie auf PixMob-Effekte
+- Mappings werden per **EEPROM** dauerhaft gespeichert (überleben Neustart)
+- **Party-Sequenz-Engine** mit 5 Presets und konfigurierbarem Tempo
 
 ### IR-Protokoll
 - Trägerfrequenz: **38 kHz**
-- Pulsbreite: **700 µs** pro Bit (patent-exakt: 694,44 µs)
-- Format: Binär-Array `{0,1,1,...}` → RLE → `irsend.sendRaw(rawBuf, len, 38)`
+- Pulsbreite: **700 µs** pro Bit (Patent US-10863607-B2)
+- Format: Binär-Array → RLE → `irsend.sendRaw()`
 
 ### Implementierte Farben & Effekte
 
-| Button | Typ | Quelle in effect_definitions.py |
-|---|---|---|
-| Rot | Farbe | `RED` |
-| Grün | Farbe | `GREEN` |
-| Blau | Farbe | `BLUE` |
-| Weiß | Farbe | `WHITISH` |
-| Gelb | Farbe | `YELLOW` |
-| Orange | Farbe | `ORANGE` |
-| Pink | Farbe | `PINK` |
-| Magenta | Farbe | `MAGENTA` |
-| Türkis | Farbe | `TURQUOISE` |
-| Fade Rot | Effekt | `RED` + `FADE_2` (63 Bit) |
-| Fade Blau | Effekt | `BLUE` + `FADE_4` (63 Bit) |
-| Blink | Effekt | `GREEN` + `SHARP_PROBABILISTIC_1` (63 Bit) |
-| Twinkle | Effekt | `WHITISH` + `FADE_PROBABILISTIC_1` (63 Bit) |
+**24 Basisfarben** in 9 Gruppen (Tabs in der Web-UI):
+Rot, Dim-Rot, Rot-Orange | Grün, Dim-Grün, Hellgrün, Gelbgrün |
+Blau, Hellblau, Dim-Blau | Weiß ×3 | Gelb ×2 | Orange ×3 | Pink ×2 | Magenta ×2 | Türkis ×2
+
+**14 Tail-Codes** (kombinierbar mit jeder Farbe):
+FADE_1–6 | BLINK_1–4 | TWINKLE_1–4
+
+**5 Party-Sequenz-Presets:**
+Regenbogen · Warm · Kühl · Disco · Weiß
+
+**13 Fernbedienungs-Slots** (per Web-UI einlernbar, EEPROM-persistent)
 
 ---
 
@@ -86,6 +93,7 @@ arduino_sender/PixMob_WebController_ESP8266/PixMob_WebController_ESP8266.ino
 | `ESPAsyncWebServer` | me-no-dev/ESPAsyncWebServer | Als .ZIP |
 | `ESPAsyncTCP` | me-no-dev/ESPAsyncTCP | Als .ZIP (Abhängigkeit) |
 | `ESP8266WiFi` | (Teil des ESP8266-Cores) | Automatisch |
+| `ESP8266mDNS` | (Teil des ESP8266-Cores) | Automatisch |
 
 **Board Manager URL für ESP8266:**
 ```
@@ -94,13 +102,37 @@ https://arduino.esp8266.com/stable/package_esp8266com_index.json
 
 ---
 
-## Flash-Einstellungen (Arduino IDE)
+## Flash-Einstellungen (arduino-cli)
 
-| Parameter | Wert |
+```bash
+# Kompilieren
+arduino-cli compile --fqbn esp8266:esp8266:d1_mini \
+  --libraries "$HOME/Documents/Arduino/libraries" \
+  arduino_sender/PixMob_WebController_ESP8266/
+
+# Flashen (Port ggf. anpassen)
+arduino-cli upload --fqbn esp8266:esp8266:d1_mini \
+  --port /dev/cu.usbserial-A5069RR4 \
+  arduino_sender/PixMob_WebController_ESP8266/
+```
+
+**Hinweis Mac/Apple Silicon:** ESP8266-Toolchain ist x86 → Rosetta 2 erforderlich.
+Python-Wrapper nötig unter:
+`~/Library/Arduino15/packages/esp8266/tools/python3/3.7.2-post1/python3`
+
+---
+
+## Web-UI Endpoints
+
+| Endpoint | Funktion |
 |---|---|
-| Board | NodeMCU 1.0 (ESP-12E) oder Wemos D1 Mini |
-| Upload Speed | 115200 |
-| Flash Size | 4MB (FS: 2MB) |
+| `GET /` | Web-UI |
+| `GET /cmd?c=RED&t=FADE_2` | Farbe + optionaler Tail senden |
+| `GET /seq/start?preset=rainbow&interval=800` | Sequenz starten |
+| `GET /seq/stop` | Sequenz stoppen |
+| `GET /learn?slot=0` | Lernmodus für Slot starten |
+| `GET /learnstatus` | Lernstatus abfragen (JSON) |
+| `GET /clearmappings` | Alle Fernbedienungs-Mappings löschen |
 
 ---
 
@@ -108,28 +140,17 @@ https://arduino.esp8266.com/stable/package_esp8266com_index.json
 
 | Datei | Inhalt |
 |---|---|
-| `python_tools/effect_definitions.py` | Alle ~60 Farb- und Tail-Codes als Python-Dict |
+| `python_tools/effect_definitions.py` | Alle ~74 Farb- und Tail-Codes als Python-Dict |
 | `www/js/effects_definitions.js` | Dieselben Codes als JavaScript |
-| `arduino_sender/PixMob_Transmitter_ESP32/` | Original ESP32-Sketch (Serial/BT) als Referenz |
+| `media/IR_Sender_KY005_Module.jpg` | Foto des IR-Sender-Moduls |
+| `case_3d/PixMob_D1Mini_Case.scad` | Parametrisches 3D-Gehäuse (OpenSCAD) |
 | `raw_wild_ir_captures/` | Echte IR-Mitschnitte von Konzerten (Coldplay, etc.) |
 
 ---
 
 ## Nächste mögliche Schritte
 
-- [ ] Weitere Effekte aus `tail_codes{}` ergänzen (z. B. `FADE_1`, `FADE_5`, `FADE_6`)
-- [ ] Alle ~60 Farben per Dropdown statt Buttons anbieten (Speicherersparnis)
-- [ ] OTA-Update-Support hinzufügen (`ArduinoOTA`)
-- [ ] mDNS einrichten → `http://pixmob.local` statt IP
-- [ ] RF-Protokoll (868/915 MHz) evaluieren für neuere Armbänder
-
----
-
-## Testanleitung
-
-1. ESP8266 flashen (Sketch oben)
-2. Seriellen Monitor öffnen (115200 Baud) → IP-Ausgabe abwarten
-3. Smartphone: WLAN `PixMob_Party` / `partytime` beitreten
-4. Browser: `http://192.168.4.1`
-5. Button drücken → Armband leuchtet auf
-6. Optimaler Abstand: ≤ 5 m, freie Sichtlinie zur IR-LED
+- [ ] 3D-Gehäuse drucken (SCAD-Datei vorhanden, Empfänger-Loch noch ergänzen)
+- [ ] OTA-Update-Support (`ArduinoOTA`)
+- [ ] RF-Protokoll (868/915 MHz) für neuere Armbänder evaluieren
+- [ ] Eigene Custom-Sequenz per Web-UI definierbar machen
