@@ -26,7 +26,7 @@ bb_l    = 55.0;   // Breite Breadboard (kurze Seite, entlang Y)
 bb_h    = 9.5;    // Dicke Breadboard (inkl. Gummi-Unterseite)
 
 /* [2 -- Komponenten-Hoehe ueber Breadboard] */
-comp_h  = 22.0;   // D1 Mini + Pin-Header + Module ca. 20 mm + 2 mm Spiel
+comp_h  = 50.0;   // Kabel-Routing-Hoehe: mind. 60 mm Gesamt (oh = 61.5 mm)
 
 /* [3 -- IR-Sender LED Loch (rechte kurze Wand, x=ow)] */
 ir_d          = 5.5;    // Durchmesser (5 mm LED + 0.5 Presspassung)
