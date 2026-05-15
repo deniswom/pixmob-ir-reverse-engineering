@@ -57,12 +57,12 @@ arduino_sender/PixMob_WebController_ESP8266/PixMob_WebController_ESP8266.ino
 
 ### Was der Sketch macht
 - Startet einen **WLAN Access Point** (kein Router nötig)
-- Stellt eine **mobile-optimierte Web-UI v2** über ESPAsyncWebServer bereit
+- Stellt eine **mobile-optimierte Web-UI v3** über ESPAsyncWebServer bereit
 - Erreichbar über `http://pixmob.local` (mDNS) oder `http://192.168.4.1`
 - Sendet PixMob-Signale mit `irsend.sendRaw()` — **5× wiederholt** für Zuverlässigkeit
 - **IR-Empfänger** liest Fernbedienungs-Codes, mappt sie auf PixMob-Effekte
 - Mappings werden per **EEPROM** dauerhaft gespeichert (überleben Neustart)
-- **Party-Sequenz-Engine** mit 5 Presets und konfigurierbarem Tempo
+- **Party-Sequenz-Engine** mit 9 Presets, konfigurierbarem Tempo und Tap Tempo
 
 ### IR-Protokoll
 - Trägerfrequenz: **38 kHz**
@@ -78,8 +78,8 @@ Blau, Hellblau, Dim-Blau | Weiß ×3 | Gelb ×2 | Orange ×3 | Pink ×2 | Magent
 **14 Tail-Codes** (kombinierbar mit jeder Farbe):
 FADE_1–6 | BLINK_1–4 | TWINKLE_1–4
 
-**5 Party-Sequenz-Presets:**
-Regenbogen · Warm · Kühl · Disco · Weiß
+**9 Party-Sequenz-Presets:**
+Regenbogen · Warm · Kühl · Disco · Weiß · Strobe · Herzschlag · Welle · Feuer
 
 **13 Fernbedienungs-Slots** (per Web-UI einlernbar, EEPROM-persistent)
 
@@ -126,13 +126,22 @@ Python-Wrapper nötig unter:
 
 | Endpoint | Funktion |
 |---|---|
-| `GET /` | Web-UI |
+| `GET /` | Web-UI v3 |
 | `GET /cmd?c=RED&t=FADE_2` | Farbe + optionaler Tail senden |
-| `GET /seq/start?preset=rainbow&interval=800` | Sequenz starten |
+| `GET /seq/start?preset=rainbow&interval=800` | Sequenz starten (Presets: rainbow, warm, cool, disco, white, strobe, heartbeat, wave, fire) |
 | `GET /seq/stop` | Sequenz stoppen |
 | `GET /learn?slot=0` | Lernmodus für Slot starten |
 | `GET /learnstatus` | Lernstatus abfragen (JSON) |
 | `GET /clearmappings` | Alle Fernbedienungs-Mappings löschen |
+
+## Web-UI v3 — Features
+
+- **Bottom-Tab-Navigation:** Farben / Party / Fernbedienung
+- **Farben-Tab:** Favoriten-Schnellleiste, 9 Farbgruppen als Kacheln mit Emoji, Effekt-Dropdown
+- **Party-Tab:** 5 Standard-Presets + 4 Sonder-Effekte (Strobe, Herzschlag, Welle, Feuer), Tap Tempo
+- **Fernbedienung-Tab:** 13 Slots als 2-Spalten-Grid mit Live-Status-Dots
+- **Top-Bar:** Aktive Farbe + Effekt immer sichtbar, Stop-Button immer erreichbar
+- **Tap Tempo:** Rhythmus durch Tippen einstellen
 
 ---
 
@@ -151,6 +160,6 @@ Python-Wrapper nötig unter:
 ## Nächste mögliche Schritte
 
 - [ ] 3D-Gehäuse drucken (SCAD-Datei vorhanden, Empfänger-Loch noch ergänzen)
-- [ ] OTA-Update-Support (`ArduinoOTA`)
+- [ ] OTA-Update-Support (`ArduinoOTA`) — kein USB-Kabel mehr nötig
 - [ ] RF-Protokoll (868/915 MHz) für neuere Armbänder evaluieren
 - [ ] Eigene Custom-Sequenz per Web-UI definierbar machen
