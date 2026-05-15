@@ -462,7 +462,7 @@ const cg={
   'Rot':    [{id:'RED',l:'Rot',bg:'#cc0000',i:'&#128308;'},{id:'DIM_RED',l:'Dim Rot',bg:'#770000',i:'&#128308;'},{id:'REDORANGE',l:'Rot-Or.',bg:'#bb3300',i:'&#127805;'}],
   'Grün':   [{id:'GREEN',l:'Grün',bg:'#006622',i:'&#128994;'},{id:'GREEN_DIM',l:'Dim',bg:'#003311',i:'&#128994;'},{id:'LIGHT_GREEN',l:'Hell',bg:'#009944',i:'&#128154;'},{id:'YELLOWGREEN',l:'Gelbgr.',bg:'#446600',i:'&#127807;'}],
   'Blau':   [{id:'BLUE',l:'Blau',bg:'#0022bb',i:'&#128309;'},{id:'LIGHT_BLUE',l:'Hell',bg:'#0055bb',i:'&#129689;'},{id:'DIM_BLUE',l:'Dim',bg:'#001166',i:'&#128309;'}],
-  'Weiß':   [{id:'WHITISH',l:'Weiß',bg:'#555',i:'&#9898;'},{id:'WHITISH_2',l:'Weiß 2',bg:'#444',i:'&#9898;'},{id:'WHITISH_3',l:'Weiß 3',bg:'#383838',i:'&#9898;'}],
+  'Weiß':   [{id:'WHITISH',l:'Weiß',bg:'#555555',i:'&#9898;'},{id:'WHITISH_2',l:'Weiß 2',bg:'#444444',i:'&#9898;'},{id:'WHITISH_3',l:'Weiß 3',bg:'#383838',i:'&#9898;'}],
   'Gelb':   [{id:'YELLOW',l:'Gelb',bg:'#aa7700',i:'&#128993;'},{id:'YELLOW_3',l:'Warm',bg:'#995500',i:'&#127765;'}],
   'Orange': [{id:'ORANGE',l:'Orange',bg:'#bb4400',i:'&#127818;'},{id:'ORANGE_2',l:'Or. 2',bg:'#aa3300',i:'&#127818;'},{id:'YELLOWORANGE',l:'Gelb-Or.',bg:'#aa6600',i:'&#128993;'}],
   'Pink':   [{id:'PINK',l:'Pink',bg:'#aa0066',i:'&#129321;'},{id:'PINK_2',l:'Pink 2',bg:'#880055',i:'&#128151;'}],
@@ -566,7 +566,10 @@ function renderGrid(){
   });
 }
 function tapCol(c){
-  actCol=c; renderGrid(); sendColor(c);
+  actCol=c;
+  const grp=Object.keys(cg).find(g=>cg[g].some(col=>col.id===c.id));
+  if(grp) swGrp(grp); else renderGrid();
+  sendColor(c);
 }
 function sendColor(c){
   const t=document.getElementById('tsel').value; updStatus();
