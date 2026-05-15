@@ -5,17 +5,13 @@
 //  Zweiteiler: Tray (Unterteil) + Lid (Deckel, Reibschluss)
 //  Druckbar OHNE Stuetzen -- beide Teile flach auf Druckbett
 //
-//  Ausrichtung:
-//    Vorderseite (Y=0)  -- KY-005 IR-Sender zeigt nach vorne
-//    Rueckseite  (Y=ol) -- USB-C Kabel + IR-Empfaenger
+//  Ausrichtung (Breadboard lange Seite = X-Achse, 85 mm):
 //
-//  Vorderseite:
-//    [mitte] IR-Sender LED Loch (5 mm, KY-005)
-//
-//  Rueckseite:
-//    [links]  USB-C Kabelkanal (Powerkabel D1 Mini)
-//    [rechts] IR-Empfaenger Loch (5 mm, Sensor)
-//    [unten]  Jumper-Kabelkanal
+//    Linke kurze Wand  (x=0):   USB-C Kabelkanal + Jumper-Kabelkanal
+//    Rechte kurze Wand (x=ow):  IR-Sender LED Loch (5 mm, KY-005)
+//    Lange Vorderwand  (y=0):   Daumen-Kerbe (Breadboard herausnehmen)
+//    Lange Rueckwand   (y=ol):  nichts
+//    Deckel (oben):             IR-Empfaenger Loch (Sensor-Dom zeigt nach oben)
 //
 //  Druck-Empfehlung:
 //    Material : PETG oder PLA
@@ -25,29 +21,29 @@
 // =============================================================================
 
 /* [1 -- Breadboard-Masse] */
-bb_w    = 85.0;   // Laenge Breadboard (8.5 cm, die lange Seite)
-bb_l    = 55.0;   // Breite Breadboard (5.5 cm, die kurze Seite)
+bb_w    = 85.0;   // Laenge Breadboard (lange Seite, entlang X)
+bb_l    = 55.0;   // Breite Breadboard (kurze Seite, entlang Y)
 bb_h    = 9.5;    // Dicke Breadboard (inkl. Gummi-Unterseite)
 
 /* [2 -- Komponenten-Hoehe ueber Breadboard] */
 comp_h  = 22.0;   // D1 Mini + Pin-Header + Module ca. 20 mm + 2 mm Spiel
 
-/* [3 -- IR-Sender LED Loch (Vorderwand)] */
+/* [3 -- IR-Sender LED Loch (rechte kurze Wand, x=ow)] */
 ir_d          = 5.5;    // Durchmesser (5 mm LED + 0.5 Presspassung)
 ir_z_above_bb = 10.0;   // Hoehe LED-Mitte ueber Breadboard-Oberflaeche
-ir_x_offset   = 0.0;    // X-Versatz von Mitte (+ = rechts, - = links)
+ir_y_offset   = 0.0;    // Y-Versatz von Mitte (+ = hinten, - = vorne)
 
-/* [4 -- IR-Empfaenger Loch (Rueckwand, rechts neben USB-C)] */
-recv_d          = 5.5;  // Durchmesser Sensor-Dom
-recv_z_above_bb = 10.0; // Hoehe Sensor-Mitte ueber Breadboard
-recv_x_offset   = 18.0; // Abstand Empfaenger-Mitte von Gehaeuse-Mitte (rechts)
+/* [4 -- IR-Empfaenger Loch (Deckel, Sensor schaut nach oben)] */
+recv_d        = 5.5;    // Durchmesser Sensor-Dom
+recv_x_frac   = 0.65;   // X-Position als Anteil von ow (0=links, 1=rechts)
+recv_y_frac   = 0.5;    // Y-Position als Anteil von ol (0=vorne, 1=hinten)
 
-/* [5 -- USB-C Kabelkanal (Rueckwand, links von Mitte)] */
+/* [5 -- USB-C Kabelkanal (linke kurze Wand, x=0)] */
 usbc_w        = 14.0;   // Breite (USB-C Kabel + Stecker ca. 12 mm)
 usbc_h        = 12.0;   // Hoehe
-usbc_x_offset = -18.0;  // Versatz von Gehaeuse-Mitte (negativ = links)
+usbc_y_offset = 0.0;    // Y-Versatz von Mitte
 
-/* [6 -- Jumper-Kabelkanal (Rueckwand, unten)] */
+/* [6 -- Jumper-Kabelkanal (linke kurze Wand, x=0, unter USB-C)] */
 jmp_w   = 40.0;   // Breite fuer mehrere Jumper-Kabel
 jmp_h   = 8.0;    // Hoehe
 
@@ -77,21 +73,21 @@ ow   = iw + 2*wall;
 ol   = il + 2*wall;
 oh   = floor_t + ih;
 
-// IR-Sender: Vorderwand
+// IR-Sender: rechte kurze Wand (x=ow)
 ir_z = floor_t + bb_h + ir_z_above_bb;
-ir_x = ow/2 + ir_x_offset;
+ir_y = ol/2 + ir_y_offset;
 
-// IR-Empfaenger: Rueckwand, rechts
-recv_z = floor_t + bb_h + recv_z_above_bb;
-recv_x = ow/2 + recv_x_offset;
-
-// USB-C: Rueckwand, links
+// USB-C: linke kurze Wand (x=0)
 usbc_z = oh - usbc_h - 1.0;
-usbc_x = ow/2 + usbc_x_offset - usbc_w/2;
+usbc_y = ol/2 + usbc_y_offset - usbc_w/2;
 
-// Jumper-Kanal: Rueckwand, unten
-jmp_x = ow/2 - jmp_w/2;
+// Jumper-Kanal: linke kurze Wand (x=0), mittig in Y
+jmp_y = ol/2 - jmp_w/2;
 jmp_z = floor_t + 0.5;
+
+// IR-Empfaenger: Deckel
+recv_x = recv_x_frac * ow;
+recv_y = recv_y_frac * ol;
 
 
 // =============================================================================
@@ -117,38 +113,29 @@ module tray() {
         translate([wall, wall, floor_t])
             cube([iw, il, ih + 0.1]);
 
-        // ---- VORDERSEITE (y = 0) ----
-
-        // IR-Sender LED Loch
-        translate([ir_x, -0.1, ir_z])
-            rotate([90, 0, 0])
+        // ---- RECHTE KURZE WAND (x=ow) -- IR-Sender LED Loch ----
+        translate([ow - wall - 0.1, ir_y, ir_z])
+            rotate([0, 90, 0])
                 cylinder(d = ir_d, h = wall + 0.2);
 
-        // Daumen-Kerbe Vorderseite (Breadboard herausnehmen)
+        // ---- LINKE KURZE WAND (x=0) -- USB-C Kabelkanal ----
+        translate([-0.1, usbc_y, usbc_z])
+            cube([wall + 0.2, usbc_w, usbc_h + 1]);
+
+        // ---- LINKE KURZE WAND (x=0) -- Jumper-Kabelkanal ----
+        translate([-0.1, jmp_y, jmp_z])
+            cube([wall + 0.2, jmp_w, jmp_h]);
+
+        // ---- VORDERE LANGE WAND (y=0) -- Daumen-Kerbe ----
         translate([ow/2 - 12, -0.1, floor_t + 1])
             cube([24, wall + 0.2, 10]);
-
-        // ---- RUECKSEITE (y = ol) ----
-
-        // USB-C Kabelkanal (links von Mitte)
-        translate([usbc_x, ol - wall - 0.1, usbc_z])
-            cube([usbc_w, wall + 0.2, usbc_h + 1]);
-
-        // IR-Empfaenger Loch (rechts neben USB-C)
-        translate([recv_x, ol - wall - 0.1, recv_z])
-            rotate([90, 0, 0])
-                cylinder(d = recv_d, h = wall + 0.2);
-
-        // Jumper-Kabelkanal (unten, volle Breite fuer alle Kabel)
-        translate([jmp_x, ol - wall - 0.1, jmp_z])
-            cube([jmp_w, wall + 0.2, jmp_h]);
     }
 
     // ---- Breadboard-Halterung ----
     rib_h = 1.0;
     rib_t = 1.5;
 
-    // 2 Laengsrippen (heben Breadboard leicht an)
+    // 2 Laengsrippen (heben Breadboard leicht an, laufen entlang X)
     for (yi = [wall + gap/2, wall + gap + bb_l - rib_t])
         translate([wall + gap, yi, floor_t])
             cube([iw, rib_t, rib_h]);
@@ -164,7 +151,7 @@ module tray() {
 
 
 // =============================================================================
-// LID -- Deckel
+// LID -- Deckel (IR-Empfaenger schaut nach oben durch das Loch)
 // =============================================================================
 module lid() {
     difference() {
@@ -182,22 +169,26 @@ module lid() {
                 }
         }
 
-        // Lueftungs-Gitter (3x5 Schlitze)
+        // IR-Empfaenger Loch (Sensor-Dom zeigt nach oben)
+        translate([recv_x, recv_y, -0.1])
+            cylinder(d = recv_d, h = lid_t + 0.2);
+
+        // Lueftungs-Gitter (3x4 Schlitze, nicht ueber Empfaenger-Loch)
         slot_w   = 3.0;
-        slot_l   = 16.0;
+        slot_l   = 14.0;
         slot_gap = 5.0;
         for (xi = [0:2])
-            for (yi = [0:4])
+            for (yi = [0:3])
                 translate([ow/2 - (3*slot_w + 2*slot_gap)/2 + xi*(slot_w + slot_gap),
-                           ol/2 - (5*slot_l + 4*4)/2 + yi*(slot_l + 4),
+                           ol/2 - (4*slot_l + 3*4)/2 + yi*(slot_l + 4),
                            -0.1])
                     cube([slot_w, slot_l, lid_t + 0.2]);
 
-        // Daumen-Kerbe rueckseitig (Deckel abziehen)
-        translate([ow/2 - 15, ol - 1.0, -0.1])
+        // Daumen-Kerbe (Deckel abziehen, vorne)
+        translate([ow/2 - 15, -0.1, -0.1])
             cube([30, 2, lid_t + 0.2]);
 
-        // Gravur-Vertiefung vorne
+        // Gravur-Vertiefung
         translate([wall + 4, wall + 4, lid_t - 0.4])
             cube([ow - 2*wall - 8, 18, 0.4 + 0.01]);
     }
@@ -233,22 +224,22 @@ color("DodgerBlue", 0.95)
 // 1. Tray und Deckel drucken (keine Stuetzen noetig)
 //
 // 2. Breadboard einsetzen:
-//    -- KY-005 Seite zeigt zur Vorderwand (mit IR-LED Loch)
+//    -- lange Seite entlang X-Achse
 //    -- Breadboard auf Laengsrippen legen, Clips rasten ein
 //
 // 3. KY-005 IR-Sender:
-//    -- LED von innen durch das Vorderwand-Loch stecken (Presspassung)
+//    -- LED von innen durch das Loch in der rechten kurzen Wand stecken
 //    -- Ggf. mit Heisskleber sichern
 //
 // 4. IR-Empfaenger:
-//    -- Sensor-Dom durch das Rueckwand-Loch (rechts) stecken
-//    -- Modul so auf Breadboard positionieren dass Sensor passt
+//    -- Sensor-Dom von unten durch das Loch im Deckel stecken
+//    -- Modul auf Breadboard positionieren und Deckel aufsetzen
 //
 // 5. Kabel:
-//    -- USB-C Powerkabel durch den linken Rueckwand-Kanal
-//    -- Restliche Jumper durch unteren Kabelkanal
+//    -- USB-C durch den linken Kabelkanal (oben)
+//    -- Jumper-Kabel durch den linken Kabelkanal (unten)
 //
-// 6. Deckel aufsetzen und eindrücken
+// 6. Deckel aufsetzen und eindr cken
 //
 echo(str("Aussenbreite ow = ", ow, " mm"));
 echo(str("Aussenlaenge ol = ", ol, " mm"));
